@@ -1,0 +1,51 @@
+#
+# Zenoh-Pico NuttX Port Kconfig
+#
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+#
+config ZENOH_PICO_NUTTX
+    bool "Zenoh-Pico NuttX Port"
+    default n
+    ---help---
+      Enable the Zenoh-Pico library for NuttX. This port is intended for ARM targets
+      (e.g. the Tiva TM4C123G LaunchPad) and supports only serial (UART) transport.
+
+if ZENOH_PICO_NUTTX
+
+config Z_FEATURE_LINK_SERIAL
+    bool "Enable Serial Transport"
+    default y
+    ---help---
+      Enable serial (UART) transport support for Zenoh-Pico on NuttX.
+
+config Z_FEATURE_LINK_TCP
+    bool "Enable TCP Transport"
+    default n
+    ---help---
+      TCP transport is not supported on this NuttX configuration.
+
+config Z_FEATURE_LINK_UDP_UNICAST
+    bool "Enable UDP Unicast Transport"
+    default n
+    ---help---
+      UDP unicast transport is not supported on this NuttX configuration.
+
+config Z_FEATURE_LINK_UDP_MULTICAST
+    bool "Enable UDP Multicast Transport"
+    default n
+    ---help---
+      UDP multicast transport is not supported on this NuttX configuration.
+
+config Z_FEATURE_LINK_BLUETOOTH
+    bool "Enable Bluetooth Transport"
+    default n
+    ---help---
+      Bluetooth transport is not supported on this NuttX configuration.
+
+config Z_FEATURE_RAWETH_TRANSPORT
+    bool "Enable Raw Ethernet Transport"
+    default n
+    ---help---
+      Raw Ethernet transport is not supported on this NuttX configuration.
+
+endif

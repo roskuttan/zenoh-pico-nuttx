@@ -1,0 +1,6 @@
+config EXAMPLES_ZENOH_PICO_DEMO
+    bool "Zenoh-Pico Demo Application"
+    default n
+    select ZENOH_PICO_NUTTX
+    ---help---
+      A simple demo that initializes the Zenoh-Pico library and prints the status.

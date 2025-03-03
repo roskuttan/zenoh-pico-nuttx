@@ -1,0 +1,7 @@
+APPDIR = $(shell pwd)
+-include $(TOPDIR)/Make.defs
+
+# Specify the source file for the demo
+CSRCS += zenoh_pico_demo_main.c
+
+MENUDESC = "Zenoh-Pico Demo Application"
