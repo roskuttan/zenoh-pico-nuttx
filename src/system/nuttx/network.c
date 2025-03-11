@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <stddef.h>
 #include "zenoh-pico/config.h"
-#include "zenoh-pico/system/platform/nuttx.h"
+//#include "zenoh-pico/system/platform/nuttx.h"
 #include "zenoh-pico/system/platform.h"
 #include "zenoh-pico/utils/logging.h"
 #include "zenoh-pico/utils/pointers.h"
