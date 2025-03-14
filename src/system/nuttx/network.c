@@ -1,5 +1,6 @@
 //
-// Copyright (c) 2025 ZettaScale Technology
+// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2025 Astrek Innovations Pvt Ltd
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -10,112 +11,204 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-//   Angelo Rison K, <roskuttan@gmail.com>  - Added NuttX RTOS Support
+//   Angelo Rison K, <roskuttan@gmail.com>, alex@astrekinnovations.com - Added NuttX RTOS Support
 //
 
 #include <fcntl.h>
-#include <termios.h>
 #include <unistd.h>
+#include <termios.h>
 #include <errno.h>
-#include <stddef.h>
-#include "zenoh-pico/config.h"
-//#include "zenoh-pico/system/platform/nuttx.h"
+#include <stdlib.h>
+
+#include "zenoh-pico/system/link/serial.h"
 #include "zenoh-pico/system/platform.h"
 #include "zenoh-pico/utils/logging.h"
 #include "zenoh-pico/utils/pointers.h"
 
 #if Z_FEATURE_LINK_SERIAL == 1
+//dummy function to avoid compilation error
+z_result_t _z_open_serial_from_pins(_z_sys_net_socket_t *sock, uint32_t txpin, uint32_t rxpin, uint32_t baudrate) {
+    z_result_t ret = _Z_RES_OK;
+    (void)(sock);
+    (void)(txpin);
+    (void)(rxpin);
+    (void)(baudrate);
 
-// typedef struct {
-//     const char *dev_name;  // Serial device name (e.g., "/dev/ttyS0")
-// } _z_sys_net_endpoint_serial_t;
+    // nuttx have menuconfig to select the serial port
+    // so we don't need to open the serial port from pins
 
-// typedef struct {
-//     int _fd;  // File descriptor for the open serial port
-// } _z_sys_net_socket_serial_t;
+    ret = _Z_ERR_GENERIC;
 
-z_result_t _z_create_endpoint_tcp(_z_sys_net_endpoint_t *ep, const char *s_address, const char *s_port) {
-    (void)s_port;  // Unused for serial transport
-    if (!ep || !s_address) {
-        return _Z_ERR_SYSTEM_GENERIC;
-    }
-    ((_z_sys_net_endpoint_serial_t *)ep)->dev_name = s_address;
-    return _Z_RES_OK;
+    return ret;
 }
+//open the serial device
+z_result_t _z_open_serial_from_dev(_z_sys_net_socket_t *sock, char *dev, uint32_t baudrate) {
+    z_result_t ret = _Z_RES_OK;
 
-void _z_free_endpoint_tcp(_z_sys_net_endpoint_t *ep) {
-    (void)ep;
-}
-
-z_result_t _z_open_tcp(_z_sys_net_socket_t *sock, const _z_sys_net_endpoint_t ep, uint32_t tout) {
-    (void)tout;
-    if (!sock) {
-        return _Z_ERR_SYSTEM_GENERIC;
+    int fd = open(dev , O_RDWR | O_NOCTTY | O_NONBLOCK);
+    if (fd<0){
+        return _Z_ERR_GENERIC;
     }
 
-    const char *dev_name = ((_z_sys_net_endpoint_serial_t *)&ep)->dev_name;
-    int fd = open(dev_name, O_RDWR | O_NOCTTY | O_NONBLOCK);
-    if (fd < 0) {
-        z_log("Failed to open serial device %s, errno: %d", dev_name, errno);
-        return _Z_ERR_SYSTEM_GENERIC;
-    }
-
-    // Configure the serial port: 115200 baud, 8N1, raw mode
-    struct termios tio;
-    if (tcgetattr(fd, &tio) < 0) {
+    struct termios config;
+    if(tcgetattr(fd, &config) < 0){
         close(fd);
-        return _Z_ERR_SYSTEM_GENERIC;
+        ret = _Z_ERR_GENERIC;
+        return ret;
     }
-    cfsetispeed(&tio, B115200);
-    cfsetospeed(&tio, B115200);
-    cfmakeraw(&tio);
-    if (tcsetattr(fd, TCSANOW, &tio) < 0) {
-        close(fd);
-        return _Z_ERR_SYSTEM_GENERIC;
-    }
-    ((_z_sys_net_socket_serial_t *)sock)->_fd = fd;
-    return _Z_RES_OK;
-}
 
-void _z_close_tcp(_z_sys_net_socket_t *sock) {
-    if (!sock) {
-        return;
-    }
-    int fd = ((_z_sys_net_socket_serial_t *)sock)->_fd;
-    if (fd >= 0) {
-        close(fd);
-        ((_z_sys_net_socket_serial_t *)sock)->_fd = -1;
-    }
-}
-
-size_t _z_read_tcp(const _z_sys_net_socket_t sock, uint8_t *ptr, size_t len) {
-    ssize_t n = read(((_z_sys_net_socket_serial_t *)&sock)->_fd, ptr, len);
-    return (n < 0) ? SIZE_MAX : (size_t)n;
-}
-
-size_t _z_read_exact_tcp(const _z_sys_net_socket_t sock, uint8_t *ptr, size_t len) {
-    size_t total = 0;
-    while (total < len) {
-        ssize_t n = read(((_z_sys_net_socket_serial_t *)&sock)->_fd, ptr + total, len - total);
-        if (n < 0) {
-            if (errno == EAGAIN) {
-                break;
-            }
-            return SIZE_MAX;
-        }
-        if (n == 0)
+    //set baudrate
+    speed_t z_baudrate_t;
+    switch (baudrate){
+        case 9600:
+            z_baudrate_t = B9600;
             break;
-        total += n;
+        case 19200:
+            z_baudrate_t = B19200;
+            break;
+        case 38400:
+            z_baudrate_t = B38400;
+            break;
+        case 57600:
+            z_baudrate_t = B57600;
+            break;
+        case 115200:
+            z_baudrate_t = B115200;
+            break;
+        case 230400: 
+            z_baudrate_t = B230400; 
+            break;
+        default:
+            z_baudrate_t = B115200;
+            break;
     }
-    return total;
-}
+    if (cfsetspeed(&config, z_baudrate_t) < 0){
+        close(fd);
+        ret = _Z_ERR_GENERIC;
+        return ret;
+    }
+    //clear existing settings for consistency
+    config.c_cflag &= ~(PARENB | CSTOPB | CSIZE | CRTSCTS);
+    config.c_iflag &= ~(IXON | IXOFF | IXANY);
+    
+    //set required settings
+    config.c_cflag |= CS8;
 
-size_t _z_send_tcp(const _z_sys_net_socket_t sock, const uint8_t *ptr, size_t len) {
-    ssize_t n = write(((_z_sys_net_socket_serial_t *)&sock)->_fd, ptr, len);
-    return (n < 0) ? 0 : (size_t)n;
+    if(tcsetattr(fd, TCSANOW, &config) < 0){
+        close(fd);
+        ret = _Z_ERR_GENERIC;
+        return ret;
+    }
+    sock -> fd = fd;
+    return _z_connect_serial(*sock);
 }
+//dummy function to avoid compilation error
+z_result_t _z_listen_serial_from_pins(_z_sys_net_socket_t *sock, uint32_t txpin, uint32_t rxpin, uint32_t baudrate) {
+    z_result_t ret = _Z_RES_OK;
+    (void)(sock);
+    (void)(txpin);
+    (void)(rxpin);
+    (void)(baudrate);
 
-#endif  // Z_FEATURE_LINK_SERIAL == 1
+    // Use menuconfig to select the serial port so you dont need any dynamic configuration
+
+    ret = _Z_ERR_GENERIC;
+
+    return ret;
+}
+//dummy function to avoid compilation error
+z_result_t _z_listen_serial_from_dev(_z_sys_net_socket_t *sock, char *dev, uint32_t baudrate) {
+    z_result_t ret = _Z_RES_OK;
+    (void)(sock);
+    (void)(dev);
+    (void)(baudrate);
+
+    // 
+    ret = _Z_ERR_GENERIC;
+
+    return ret;
+}
+//read the serial device
+size_t _z_read_serial_internal(const _z_sys_net_socket_t sock, uint8_t *header, uint8_t *ptr, size_t len){
+    uint8_t *raw_buf = z_malloc(_Z_SERIAL_MAX_COBS_BUF_SIZE);
+    if(raw_buf == NULL){
+        return SIZE_MAX;
+    }
+    size_t rb = 0;
+    for (size_t i = 0; i < _Z_SERIAL_MAX_COBS_BUF_SIZE; i++){
+        ssize_t res;
+        while((res = read(sock.fd, &raw_buf[i],1))!=1){
+            if(res<0){
+                if(errno == EAGAIN){
+                    continue;
+                } else {
+                    z_free(raw_buf);
+                    return SIZE_MAX;
+                }
+            }
+            break;
+        }
+        rb++;
+        if(raw_buf[i] == (uint8_t)0x00){
+            break;
+        }
+    }
+    uint8_t *tmp_buf = z_malloc(_Z_SERIAL_MFS_SIZE);
+    if(tmp_buf == NULL){
+        z_free(raw_buf);
+        return SIZE_MAX;
+    }
+    size_t ret = _z_serial_msg_deserialize(raw_buf, rb, ptr, len, header, tmp_buf, _Z_SERIAL_MFS_SIZE);
+    z_free(raw_buf);
+    z_free(tmp_buf);
+    if(ret == SIZE_MAX){
+        return SIZE_MAX;
+    }
+    return ret;
+}
+//write to the serial device
+size_t _z_send_serial_internal(const _z_sys_net_socket_t sock, uint8_t header, const uint8_t *ptr, size_t len){
+    uint8_t *tmp_buf = z_malloc(_Z_SERIAL_MFS_SIZE);
+    if(tmp_buf == NULL){
+        return SIZE_MAX;
+    }
+    uint8_t *raw_buf = z_malloc(_Z_SERIAL_MAX_COBS_BUF_SIZE);
+    if(raw_buf == NULL){
+        z_free(tmp_buf);
+        return SIZE_MAX;
+    }
+    size_t frame_len = _z_serial_msg_serialize(raw_buf, _Z_SERIAL_MAX_COBS_BUF_SIZE, ptr, len, header, tmp_buf, _Z_SERIAL_MFS_SIZE);
+    if(frame_len == SIZE_MAX){
+        z_free(tmp_buf);
+        z_free(raw_buf);
+        return SIZE_MAX;
+    }
+    size_t bytes_written = 0;
+    while (bytes_written < frame_len){
+        ssize_t sent = write(sock.fd, raw_buf + bytes_written, frame_len - bytes_written);
+        if(sent < 0){
+            if(errno == EAGAIN){
+                continue;
+            } else {
+                z_free(tmp_buf);
+                z_free(raw_buf);
+                return SIZE_MAX;
+            }
+        }
+        bytes_written += sent;
+    }
+    z_free(tmp_buf);
+    z_free(raw_buf);
+    return frame_len;
+}
+//close the serial device
+void _z_close_serial(_z_sys_net_socket_t *sock) {
+    if(sock && sock->fd >= 0){
+        close(sock->fd);
+        sock->fd = -1;
+    }
+}
+#endif // Z_FEATURE_LINK_SERIAL == 1
 
 #if Z_FEATURE_LINK_TCP == 1
 #error "TCP not supported yet on NuttX port of Zenoh-Pico"

@@ -1,5 +1,6 @@
 //
-// Copyright (c) 2025 ZettaScale Technology
+// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2025 Astrek Innovations Pvt Ltd
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -10,7 +11,7 @@
 //
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
-//   Angelo Rison K, <roskuttan@gmail.com>  - Added NuttX RTOS Support
+//   Angelo Rison K, <roskuttan@gmail.com>, alex@astrekinnovations.com - Added NuttX RTOS Support
 //
 
 #ifndef ZENOH_PICO_SYSTEM_NUTTX_H
@@ -45,7 +46,7 @@ typedef struct timeval  z_time_t;
 
 /*------------------ Serial Types ------------------*/
 typedef struct {
-    int _fd;
+    int fd;
 } _z_sys_net_socket_t;
 
 typedef struct {
