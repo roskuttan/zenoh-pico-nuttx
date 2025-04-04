@@ -31,12 +31,14 @@ extern "C" {
 typedef pthread_t       _z_task_t;
 typedef pthread_attr_t  z_task_attr_t;
 typedef pthread_mutex_t _z_mutex_t;
+typedef pthread_mutex_t _z_mutex_rec_t;
 typedef pthread_cond_t  _z_condvar_t;
 #else
 /* Dummy definitions if multi-threading is disabled */
 typedef void* _z_task_t;
 typedef void* z_task_attr_t;
 typedef void* _z_mutex_t;
+typedef void* _z_mutex_rec_t;
 typedef void* _z_condvar_t;
 #endif
 

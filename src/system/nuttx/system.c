@@ -198,7 +198,32 @@
  {
    return (pthread_mutex_unlock(m) == 0) ? _Z_RES_OK : _Z_ERR_SYSTEM_GENERIC;
  }
- 
+ z_result_t _z_mutex_rec_init(_z_mutex_rec_t *m) {
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  int ret = pthread_mutex_init(m, &attr);
+  pthread_mutexattr_destroy(&attr);
+  return (ret == 0) ? _Z_RES_OK : _Z_ERR_SYSTEM_GENERIC;
+}
+
+z_result_t _z_mutex_rec_drop(_z_mutex_rec_t *m) {
+  if (m == NULL)
+      return _Z_RES_OK;
+  return (pthread_mutex_destroy(m) == 0) ? _Z_RES_OK : _Z_ERR_SYSTEM_GENERIC;
+}
+
+z_result_t _z_mutex_rec_lock(_z_mutex_rec_t *m) {
+  return (pthread_mutex_lock(m) == 0) ? _Z_RES_OK : _Z_ERR_SYSTEM_GENERIC;
+}
+
+z_result_t _z_mutex_rec_try_lock(_z_mutex_rec_t *m) {
+  return (pthread_mutex_trylock(m) == 0) ? _Z_RES_OK : _Z_ERR_SYSTEM_GENERIC;
+}
+
+z_result_t _z_mutex_rec_unlock(_z_mutex_rec_t *m) {
+  return (pthread_mutex_unlock(m) == 0) ? _Z_RES_OK : _Z_ERR_SYSTEM_GENERIC;
+}
  //---------------------------------------------------------------------
  // Condition Variable Functions
  //---------------------------------------------------------------------
