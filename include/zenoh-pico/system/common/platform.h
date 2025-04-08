@@ -50,6 +50,8 @@
 #include "zenoh-pico/system/platform/rpi_pico.h"
 #elif defined(ZENOH_NUTTX)
 #include "zenoh-pico/system/platform/nuttx.h"
+#elif defined(ZENOH_GENERIC)
+#include "zenoh_generic_platform.h"
 #else
 #include "zenoh-pico/system/platform/void.h"
 #error "Unknown platform"
