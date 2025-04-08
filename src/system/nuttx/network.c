@@ -199,7 +199,7 @@ size_t _z_send_serial_internal(const _z_sys_net_socket_t sock, uint8_t header, c
     }
     z_free(tmp_buf);
     z_free(raw_buf);
-    return frame_len;
+    return len;
 }
 //close the serial device
 void _z_close_serial(_z_sys_net_socket_t *sock) {

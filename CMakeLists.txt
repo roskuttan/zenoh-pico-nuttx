@@ -191,6 +191,7 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Generic")
   elseif(WITH_NUTTX)
     set(CHECK_THREADS "OFF")
   # Override feature flags for NuttX
+    set(ZENOH_DEBUG 0 CACHE STRING "Use this to set the ZENOH_DEBUG variable")
     set(Z_FEATURE_LINK_TCP 0 CACHE STRING "Toggle TCP links" FORCE)
     set(Z_FEATURE_LINK_SERIAL 1 CACHE STRING "Toggle Serial links" FORCE)
     set(Z_FEATURE_LINK_UDP_UNICAST 0 CACHE STRING "Toggle UDP unicast links" FORCE)
