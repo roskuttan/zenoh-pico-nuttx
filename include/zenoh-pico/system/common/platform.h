@@ -36,6 +36,8 @@
 #include "zenoh-pico/system/platform/mbed.h"
 #elif defined(ZENOH_ZEPHYR)
 #include "zenoh-pico/system/platform/zephyr.h"
+#elif defined(ZENOH_NUTTX)
+#include "zenoh-pico/system/platform/nuttx.h"
 #elif defined(ZENOH_ARDUINO_ESP32)
 #include "zenoh-pico/system/platform/arduino/esp32.h"
 #elif defined(ZENOH_ARDUINO_OPENCR)
